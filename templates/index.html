@@ -40,30 +40,85 @@ body.light {
   --topbar-border: #e5e7eb;
 }
 
+/* ── Light mode overrides ── */
 body.light .app-title { color: #111827; }
-body.light .new-chat-btn { border-color: #d1d5db; color: #374151; }
+body.light .new-chat-btn { border-color: #d1d5db; color: #374151; background: transparent; }
 body.light .tb-btn { color: #374151; }
+body.light .sidebar { background: #f3f4f6; border-right-color: #e5e7eb; }
+body.light .sb-header { background: #f3f4f6; border-bottom-color: #e5e7eb; }
 body.light .sb-title { color: #111827; }
 body.light .sb-close { color: #6b7280; }
-body.light .sb-item-title { color: #111827; }
-body.light .sb-item-date { color: #9ca3af; }
+body.light .sb-body { background: #f3f4f6; }
+body.light .sb-item { color: #111827; }
 body.light .sb-item:hover { background: #e5e7eb; }
 body.light .sb-item.on { background: #e5e7eb; }
+body.light .sb-item-title { color: #111827; }
+body.light .sb-item-date { color: #6b7280; }
+body.light .sb-item-del { color: #9ca3af; }
+body.light .sb-item-del:active { color: #ef4444; background: #fee2e2; }
 body.light .sb-empty { color: #9ca3af; }
+body.light .topbar { background: #f9fafb; border-bottom-color: #e5e7eb; }
+body.light .messages { background: #f9fafb; }
 body.light .welcome h2 { color: #111827; }
 body.light .welcome p { color: #6b7280; }
+
+/* AI bubble in light mode */
+body.light .bubble.ai {
+  background: #ffffff;
+  border-color: #e5e7eb;
+  color: #111827;
+}
+body.light .bubble.ai strong { color: #111827; }
+body.light .bubble.ai em { color: #374151; }
+body.light .bubble.ai code {
+  background: #f1f5f9;
+  color: #0f766e;
+}
+body.light .bubble.ai pre {
+  background: #f1f5f9;
+  border-color: #e2e8f0;
+}
+body.light .bubble.ai pre code { background: transparent; color: #0f172a; }
+
+/* User bubble in light mode */
+body.light .bubble.user {
+  background: #dbeafe;
+  border-color: #bfdbfe;
+  color: #1e3a8a;
+}
+
+/* Code block in light mode */
+body.light .code-block { border-color: #e2e8f0; }
+body.light .code-top { background: #e8edf2; border-bottom-color: #e2e8f0; }
+body.light .code-copy-btn { color: #374151; border-color: #d1d5db; background: transparent; }
+body.light .code-copy-btn:active { background: #e5e7eb; }
+body.light .code-block pre { background: #f1f5f9; }
+body.light .code-block code { color: #0f172a; }
+
+/* Avatars */
+body.light .av.ai { background: #4f46e5; color: #ffffff; }
 body.light .av.user { background: #e5e7eb; color: #374151; border-color: #d1d5db; }
+
+/* Meta */
 body.light .msg-time { color: #9ca3af; }
 body.light .msg-copy-btn { color: #9ca3af; }
+body.light .msg-copy-btn:active { color: #4f46e5; }
 body.light .edit-btn { color: #6b7280; border-color: #d1d5db; }
+
+/* Input area */
+body.light .input-area { background: #f9fafb; border-top-color: #e5e7eb; }
+body.light .input-box { background: #ffffff; border-color: #d1d5db; }
+body.light .input-box:focus-within { border-color: #4f46e5; }
 body.light .chat-textarea { color: #111827; }
 body.light .chat-textarea::placeholder { color: #9ca3af; }
 body.light .input-hint { color: #9ca3af; }
-body.light .code-copy-btn { color: #374151; border-color: #d1d5db; }
-body.light .sb-item-del { color: #9ca3af; }
-body.light .sb-item-del:active { color: #ef4444; background: #fee2e2; }
-body.light .bubble.ai code { color: #0f766e; }
-body.light .edit-textarea { color: #111827; background: #f3f4f6; border-color: #4f46e5; }
+
+/* Edit textarea */
+body.light .edit-textarea { color: #111827; background: #ffffff; border-color: #4f46e5; }
+body.light .edit-cancel { color: #6b7280; border-color: #d1d5db; }
+
+/* Typing dots */
+body.light .tdot { background: #9ca3af; }
 
 body:not(.light) {
   --bg-top: #111827;
