@@ -250,6 +250,9 @@ body:not(.light) {
   cursor: pointer;
   margin-bottom: 2px;
   -webkit-tap-highlight-color: transparent;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 .sb-item:active { background: #1f2937; }
 .sb-item.on { background: #1f2937; }
@@ -261,6 +264,21 @@ body:not(.light) {
   text-overflow: ellipsis;
 }
 .sb-item-date { font-size: 0.65rem; color: #4b5563; margin-top: 2px; }
+
+.sb-item-del {
+  background: transparent;
+  border: none;
+  color: #4b5563;
+  font-size: 0.75rem;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 4px;
+  flex-shrink: 0;
+  -webkit-tap-highlight-color: transparent;
+  display: none;
+}
+.sb-item:hover .sb-item-del { display: block; }
+.sb-item-del:active { color: #ef4444; background: #1f2937; }
 
 /* Messages */
 .messages {
@@ -653,13 +671,26 @@ function renderHistory() {
   list.forEach(function(c) {
     var item = document.createElement("div");
     item.className = "sb-item" + (c.id === currentId ? " on" : "");
-    item.innerHTML = "<div class='sb-item-title'>" + escHtml(c.title) + "</div>" +
-      "<div class='sb-item-date'>" + new Date(c.ts).toLocaleDateString() + "</div>";
-    item.addEventListener("click", function() {
+    item.innerHTML =
+      "<div class='sb-item-text' style='flex:1;min-width:0;'>" +
+        "<div class='sb-item-title'>" + escHtml(c.title) + "</div>" +
+        "<div class='sb-item-date'>" + new Date(c.ts).toLocaleDateString() + "</div>" +
+      "</div>" +
+      "<button class='sb-item-del' title='Delete'>&#10005;</button>";
+
+    // click on item text loads the chat
+    item.querySelector(".sb-item-text").addEventListener("click", function() {
       loadChat(c.id);
       document.getElementById("sidebar").classList.remove("open");
       document.getElementById("overlay").classList.remove("open");
     });
+
+    // click on delete button removes the chat
+    item.querySelector(".sb-item-del").addEventListener("click", function(e) {
+      e.stopPropagation();
+      deleteChat(c.id, item);
+    });
+
     body.appendChild(item);
   });
 }
@@ -676,6 +707,23 @@ function saveChat() {
     chats.push({ id: currentId, title: title, messages: msgs, ts: Date.now() });
   }
   localStorage.setItem("sc_v6", JSON.stringify(chats));
+}
+
+function deleteChat(id, itemEl) {
+  chats = chats.filter(function(c) { return c.id !== id; });
+  localStorage.setItem("sc_v6", JSON.stringify(chats));
+  itemEl.remove();
+  // if deleted chat was active, start new chat
+  if (id === currentId) {
+    currentId = null;
+    msgs = [];
+    document.getElementById("messages").innerHTML = "<div class='welcome' id='welcome'><h2>SwarmChat</h2><p>Ask me anything</p></div>";
+  }
+  // show empty message if no chats left
+  var body = document.getElementById("sbBody");
+  if (!chats.length) {
+    body.innerHTML = "<div class='sb-empty'>No chats yet</div>";
+  }
 }
 
 function loadChat(id) {
