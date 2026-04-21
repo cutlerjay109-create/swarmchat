@@ -9,7 +9,7 @@
 
 SwarmChat is a peer-to-peer multi-agent system built for the Vertex Swarm Challenge 2026. Three autonomous AI agents coordinate entirely over a UDP mesh network — discovering each other, claiming tasks, executing work, detecting faults, and recovering automatically — all without a master controller.
 
-As a real-world application layer, the swarm powers **SwarmChat** — an intelligent chat interface where agents race to answer user queries in parallel. If one agent fails mid-response, another takes over instantly. The user never notices.
+As a real-world application, the swarm powers **SwarmChat** — an intelligent chat interface where agents race to answer user queries in parallel. If one agent fails mid-response, another takes over instantly. The user never notices.
 
 ---
 
@@ -21,7 +21,7 @@ Most AI systems today rely on a central orchestrator:
 Every agent → reports to central server → server tells each agent what to do
 ```
 
-This is fragile. One server crash kills everything. One network hiccup stops all agents. One vendor change breaks the whole system.
+This is fragile. One server crash kills everything. One network hiccup stops all agents.
 
 SwarmChat eliminates the middleman entirely:
 
@@ -45,43 +45,41 @@ Built from scratch using Python `asyncio` and UDP sockets. No vendor middleware.
 
 | Function | Description |
 |----------|-------------|
-| **Discovery** | Agents announce themselves on startup. Every peer is tracked via heartbeat signals |
-| **Task Claiming** | Agents broadcast claims across the mesh. No two agents ever duplicate work |
+| **Discovery** | Agents announce themselves on startup and track peers via heartbeat signals |
+| **Task Claiming** | Agents broadcast claims across the mesh — no two agents ever duplicate work |
 | **Heartbeat** | Every agent pings peers every 3 seconds to confirm it is alive |
 | **Fault Detection** | Silence for 10 seconds triggers a fault — the dead agent is declared offline |
 | **Auto Recovery** | Abandoned tasks are freed and claimed by surviving agents automatically |
-| **Consensus** | Agents compare completed task lists and collectively confirm when all work is done |
+| **Consensus** | Agents collectively confirm when all work is done — no single agent decides |
 
 ### Layer 2 — SwarmChat (Application)
 
-A clean web-based chat interface where the swarm processes user queries.
+A clean web-based chat interface powered entirely by the swarm.
 
 | Feature | Description |
 |---------|-------------|
 | **Parallel Execution** | All 3 agents race to answer — fastest response wins |
 | **Fault Tolerance** | If an agent fails mid-query, another delivers the response |
-| **Web Search** | Real-time search via Tavily for accurate, up-to-date answers |
-| **Smart Routing** | Coding questions skip search and go directly to Groq LLM |
+| **Real-time Knowledge** | Answers grounded in current, up-to-date information |
+| **Smart Routing** | Different query types handled by the most appropriate agent strategy |
 | **Chat History** | Full conversation history saved locally, resumable at any time |
-| **Edit & Resend** | Users can edit any previous message and resend from that point |
+| **Edit and Resend** | Users can edit any previous message and resend from that point |
 | **Light / Dark Mode** | Full theme support with persistent preference |
 
 ---
 
-## How It Works — The Full Flow
+## How It Works
 
 ```
 User sends a message
         ↓
 SwarmChat receives it
         ↓
-Smart router decides: search needed? (factual) or skip? (coding)
+Smart router determines the best strategy for the query
         ↓
-If search → Tavily fetches real-time web results
+Real-time information fetched when needed
         ↓
-All 3 agents receive the query + search context simultaneously
-        ↓
-Agents race to respond using Groq LLaMA 3.3 70B
+All 3 agents process the query simultaneously
         ↓
 First agent to respond wins — result delivered to user
         ↓
@@ -90,29 +88,12 @@ If an agent crashes → others already running → no interruption
 
 ---
 
-## The Swarm Terminal Demo
-
-Run the raw swarm without the web interface to see the coordination layer directly:
-
-```bash
-python3 run_swarm.py
-```
-
-**What you will see:**
-1. 3 agents start up and discover each other
-2. 9 tasks distributed across the swarm with zero duplication
-3. Kill any agent mid-run — the swarm detects it within 10 seconds
-4. Abandoned task recovered and completed by a surviving agent
-5. All 9 tasks complete regardless of agent failures
-
----
-
 ## Running the Project
 
 ### Prerequisites
 
 ```bash
-pip install groq flask flask-cors tavily-python python-dotenv
+pip install -r requirements.txt
 ```
 
 ### Environment Variables
@@ -120,8 +101,8 @@ pip install groq flask flask-cors tavily-python python-dotenv
 Create a `.env` file in the project root:
 
 ```
-GROQ_API_KEY=your_groq_api_key
-TAVILY_API_KEY=your_tavily_api_key
+AI_API_KEY=your_key_here
+SEARCH_API_KEY=your_key_here
 ```
 
 ### Run the Swarm Demo (Terminal)
@@ -129,6 +110,13 @@ TAVILY_API_KEY=your_tavily_api_key
 ```bash
 python3 run_swarm.py
 ```
+
+**What you will see:**
+1. 3 agents start up and discover each other via P2P mesh
+2. Tasks distributed across agents with zero duplication
+3. Kill any agent mid-run — swarm detects it within 10 seconds
+4. Abandoned task recovered and completed by a surviving agent
+5. All tasks complete regardless of agent failures
 
 ### Run SwarmChat (Web Interface)
 
@@ -147,13 +135,13 @@ swarm-project/
 │
 ├── agent.py              # Core agent — all 6 swarm functions
 ├── tasks.py              # Sample task definitions
-├── run_swarm.py          # Launches 3 agents simultaneously
-├── server.py             # Flask backend — swarm + web search + chat API
+├── run_swarm.py          # Launches all agents simultaneously
+├── server.py             # Backend — swarm coordination + chat API
 ├── requirements.txt      # Python dependencies
-├── vercel.json           # Vercel deployment configuration
+├── vercel.json           # Deployment configuration
 │
 ├── api/
-│   └── index.py          # Serverless entry point for Vercel
+│   └── index.py          # Serverless entry point
 │
 └── templates/
     └── index.html        # SwarmChat web interface
@@ -166,10 +154,10 @@ swarm-project/
 | Component | Technology |
 |-----------|------------|
 | Agent coordination | Python asyncio + UDP sockets (built from scratch) |
-| AI brain | Groq API — LLaMA 3.3 70B |
-| Real-time search | Tavily Search API |
-| Web framework | Flask + Flask-CORS |
-| Frontend | Vanilla HTML/CSS/JS |
+| AI execution | Large language model inference |
+| Real-time knowledge | Live web search integration |
+| Web framework | Flask |
+| Frontend | Vanilla HTML / CSS / JavaScript |
 | Deployment | Vercel |
 
 ---
@@ -191,23 +179,25 @@ swarm-project/
 ## Demo Highlights
 
 **Fault Recovery in action:**
+
 ```
-2:27:09 PM  Agent 2 claimed task 4
-2:27:09 PM  Agent 2 was killed          ← agent dies mid-task
-2:27:18 PM  FAULT DETECTED: Agent 2 is dead!
-2:27:18 PM  Recovering task 4 from dead Agent 2
-2:27:20 PM  Agent 1 claimed task 4      ← swarm self-heals
-2:27:23 PM  Agent 1 completed task 4
-2:27:23 PM  All tasks complete ✓        ← nothing was lost
+Agent 2 claimed task 4
+Agent 2 was killed              ← agent dies mid-task
+FAULT DETECTED: Agent 2 is dead!
+Recovering task 4 from dead Agent 2
+Agent 1 claimed task 4          ← swarm self-heals
+Agent 1 completed task 4
+All tasks complete ✓            ← nothing was lost
 ```
 
 ---
 
-## Built By
+## Built For
 
-Solo builder — Vertex Swarm Challenge 2026
-Track 3 | The Agent Economy
+Vertex Swarm Challenge 2026 — Track 3 | The Agent Economy
+
+Solo builder submission.
 
 ---
 
-> SwarmChat is AI and can make mistakes. The swarm coordination layer is deterministic — the AI responses are not.
+> SwarmChat is AI-powered and can make mistakes. The swarm coordination layer is deterministic — the AI responses are not.
