@@ -7,10 +7,9 @@
 <style>
 * { margin:0; padding:0; box-sizing:border-box; }
 
-html, body {
-  height: 100%;
-  overflow: hidden;
-  overscroll-behavior-y: auto;
+html { height: 100%; }
+body {
+  min-height: 100%;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   background: #111827;
   color: #e5e7eb;
@@ -147,8 +146,8 @@ body:not(.light) {
 .layout {
   display: flex;
   flex-direction: column;
-  height: 100vh;
   height: 100dvh;
+  min-height: 100dvh;
 }
 
 /* Topbar */

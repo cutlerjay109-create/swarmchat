@@ -24,31 +24,54 @@ For coding questions, write clean correct working code with brief explanation.
 Be clear, accurate, concise and friendly.
 Always remember the full conversation history."""
 
-CODING_KEYWORDS = [
-    "write", "code", "function", "script", "program", "debug", "fix",
-    "error", "bug", "python", "javascript", "html", "css", "sql",
-    "class", "loop", "array", "list", "dict", "api", "regex",
-    "algorithm", "implement", "build", "create a", "make a"
+# Only search when the question is clearly about real-time or verifiable info
+SEARCH_TRIGGERS = [
+    "news", "today", "yesterday", "current", "latest", "recent",
+    "price", "stock", "crypto", "bitcoin", "ethereum",
+    "weather", "score", "result", "breaking",
+    "2024", "2025", "2026", "this week", "this month",
+    "who won", "who is the ceo", "who is the president",
+    "release date", "when did", "when will"
 ]
 
-SEARCH_KEYWORDS = [
-    "what is", "who is", "when did", "where is", "how does",
-    "price", "news", "today", "current", "latest", "forex",
-    "stock", "crypto", "trading", "market", "define", "meaning",
-    "explain", "tell me about", "history of", "2024", "2025", "2026"
+# Never search for casual chat, coding, or known concepts
+SKIP_SEARCH = [
+    # casual
+    "hi", "hello", "hey", "thanks", "thank you", "ok", "okay",
+    "good morning", "good night", "bye", "how are you",
+    # coding
+    "write", "code", "function", "script", "program", "debug",
+    "fix", "error", "bug", "python", "javascript", "html", "css",
+    "class", "loop", "array", "regex", "algorithm", "implement",
+    "refactor", "optimize",
+    # math and general
+    "calculate", "solve", "explain", "what does", "how do i",
+    "help me", "can you"
 ]
 
 def needs_search(message):
-    msg_lower = message.lower()
-    for kw in CODING_KEYWORDS:
-        if kw in msg_lower:
-            print(f"[ROUTER] Coding — skipping search")
+    msg = message.lower().strip()
+
+    # very short messages — never search
+    if len(msg) < 10:
+        print(f"[ROUTER] Too short, skipping search")
+        return False
+
+    # check skip list first — casual chat, coding, general
+    for kw in SKIP_SEARCH:
+        if msg.startswith(kw + " ") or msg == kw or msg.startswith(kw + ",") or msg.startswith(kw + "!") or msg.startswith(kw + "."):
+            print(f"[ROUTER] Casual/coding ({kw}) — skipping search")
             return False
-    for kw in SEARCH_KEYWORDS:
-        if kw in msg_lower:
-            print(f"[ROUTER] Factual — searching web")
+
+    # only search if the message clearly needs real-time info
+    for trigger in SEARCH_TRIGGERS:
+        if trigger in msg:
+            print(f"[ROUTER] Real-time trigger ({trigger}) — searching")
             return True
-    return True
+
+    # default: do not search — let the AI answer from training
+    print(f"[ROUTER] No trigger — skipping search")
+    return False
 
 def search_web(query):
     try:
