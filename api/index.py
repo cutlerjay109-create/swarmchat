@@ -24,35 +24,37 @@ For coding questions, write clean correct working code with brief explanation.
 Be clear, accurate, concise and friendly.
 Always remember the full conversation history."""
 
-CODING_KEYWORDS = [
-    "write", "code", "function", "script", "program", "debug", "fix",
-    "error", "bug", "python", "javascript", "html", "css", "sql",
-    "class", "loop", "array", "list", "dict", "api", "regex",
-    "algorithm", "implement", "build", "create a", "make a"
+SEARCH_TRIGGERS = [
+    "news", "today", "yesterday", "current", "latest", "recent",
+    "price", "stock", "crypto", "bitcoin", "ethereum",
+    "weather", "score", "result", "breaking",
+    "2024", "2025", "2026", "this week", "this month",
+    "who won", "who is the ceo", "who is the president",
+    "release date", "when did", "when will"
 ]
 
-SEARCH_KEYWORDS = [
-    "what is", "who is", "when did", "where is", "how does",
-    "price", "news", "today", "current", "latest", "forex",
-    "stock", "crypto", "trading", "market", "define", "meaning",
-    "explain", "tell me about", "history of", "2024", "2025", "2026"
+SKIP_SEARCH = [
+    "hi", "hello", "hey", "thanks", "thank you", "ok", "okay",
+    "good morning", "good night", "bye", "how are you",
+    "write", "code", "function", "script", "program", "debug",
+    "fix", "error", "bug", "python", "javascript", "html", "css",
+    "class", "loop", "array", "regex", "algorithm", "implement",
+    "refactor", "optimize",
+    "calculate", "solve", "explain", "what does", "how do i",
+    "help me", "can you"
 ]
-
-# Swarm state — in-memory for this serverless instance
-swarm_state = {
-    "agents": {1: "idle", 2: "idle", 3: "idle"},
-    "winner": None
-}
 
 def needs_search(message):
-    msg_lower = message.lower()
-    for kw in CODING_KEYWORDS:
-        if kw in msg_lower:
+    msg = message.lower().strip()
+    if len(msg) < 10:
+        return False
+    for kw in SKIP_SEARCH:
+        if msg.startswith(kw + " ") or msg == kw or msg.startswith(kw + ",") or msg.startswith(kw + "!") or msg.startswith(kw + "."):
             return False
-    for kw in SEARCH_KEYWORDS:
-        if kw in msg_lower:
+    for trigger in SEARCH_TRIGGERS:
+        if trigger in msg:
             return True
-    return True
+    return False
 
 def search_web(query):
     try:
