@@ -517,68 +517,6 @@ body:not(.light) {
 }
 .msg-copy-btn:active { color: #818cf8; }
 
-/* Pull to refresh */
-.ptr-indicator {
-  position: fixed;
-  top: 52px;
-  left: 0;
-  right: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 0;
-  overflow: hidden;
-  transition: height 0.2s;
-  z-index: 50;
-  background: var(--bg-top);
-  border-bottom: 1px solid var(--border);
-}
-.ptr-indicator.show { height: 48px; }
-.ptr-spinner {
-  width: 20px; height: 20px;
-  border: 2px solid var(--border);
-  border-top-color: #4f46e5;
-  border-radius: 50%;
-  animation: ptr-spin 0.7s linear infinite;
-}
-.ptr-text {
-  font-size: 0.75rem;
-  color: var(--muted);
-  margin-left: 10px;
-}
-@keyframes ptr-spin { to { transform: rotate(360deg); } }
-
-/* Pull to refresh */
-.ptr-indicator {
-  position: fixed;
-  top: 52px;
-  left: 0;
-  right: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 0;
-  overflow: hidden;
-  transition: height 0.2s;
-  z-index: 50;
-  background: var(--bg-top);
-  border-bottom: 1px solid var(--border);
-}
-.ptr-indicator.show { height: 48px; }
-.ptr-spinner {
-  width: 20px; height: 20px;
-  border: 2px solid var(--border);
-  border-top-color: #4f46e5;
-  border-radius: 50%;
-  animation: ptr-spin 0.7s linear infinite;
-}
-.ptr-text {
-  font-size: 0.75rem;
-  color: var(--muted);
-  margin-left: 10px;
-}
-@keyframes ptr-spin { to { transform: rotate(360deg); } }
-
 /* Typing */
 .typing-dots {
   display: flex;
@@ -717,11 +655,6 @@ body:not(.light) {
     <span class="ptr-text" id="ptrText">Release to refresh</span>
   </div>
 
-  <div class="ptr-indicator" id="ptrIndicator">
-    <div class="ptr-spinner"></div>
-    <span class="ptr-text" id="ptrText">Release to refresh</span>
-  </div>
-
   <div class="messages" id="messages">
     <div class="welcome" id="welcome">
       <h2>SwarmChat</h2>
@@ -744,92 +677,6 @@ body:not(.light) {
 </div>
 
 <script>
-// Pull to refresh
-(function() {
-  var startY = 0;
-  var pulling = false;
-  var threshold = 80;
-  var msgs = document.getElementById("messages");
-  var indicator = document.getElementById("ptrIndicator");
-  var ptrText = document.getElementById("ptrText");
-
-  document.addEventListener("touchstart", function(e) {
-    if (msgs.scrollTop === 0) {
-      startY = e.touches[0].clientY;
-      pulling = true;
-    }
-  }, {passive: true});
-
-  document.addEventListener("touchmove", function(e) {
-    if (!pulling) return;
-    var dy = e.touches[0].clientY - startY;
-    if (dy > 0 && msgs.scrollTop === 0) {
-      if (dy > 20) {
-        indicator.classList.add("show");
-        ptrText.textContent = dy > threshold ? "Release to refresh" : "Pull to refresh";
-      }
-    }
-  }, {passive: true});
-
-  document.addEventListener("touchend", function(e) {
-    if (!pulling) return;
-    pulling = false;
-    var dy = e.changedTouches[0].clientY - startY;
-    if (dy > threshold && msgs.scrollTop === 0) {
-      ptrText.textContent = "Refreshing...";
-      setTimeout(function() {
-        indicator.classList.remove("show");
-        location.reload();
-      }, 500);
-    } else {
-      indicator.classList.remove("show");
-    }
-  }, {passive: true});
-})();
-
-// Pull to refresh
-(function() {
-  var startY = 0;
-  var pulling = false;
-  var threshold = 80;
-  var msgs = document.getElementById("messages");
-  var indicator = document.getElementById("ptrIndicator");
-  var ptrText = document.getElementById("ptrText");
-
-  document.addEventListener("touchstart", function(e) {
-    if (msgs.scrollTop === 0) {
-      startY = e.touches[0].clientY;
-      pulling = true;
-    }
-  }, {passive: true});
-
-  document.addEventListener("touchmove", function(e) {
-    if (!pulling) return;
-    var dy = e.touches[0].clientY - startY;
-    if (dy > 0 && msgs.scrollTop === 0) {
-      if (dy > 20) {
-        indicator.classList.add("show");
-        ptrText.textContent = dy > threshold ? "Release to refresh" : "Pull to refresh";
-      }
-    }
-  }, {passive: true});
-
-  document.addEventListener("touchend", function(e) {
-    if (!pulling) return;
-    pulling = false;
-    var dy = e.changedTouches[0].clientY - startY;
-    if (dy > threshold && msgs.scrollTop === 0) {
-      ptrText.textContent = "Refreshing...";
-      setTimeout(function() {
-        indicator.classList.remove("show");
-        location.reload();
-      }, 500);
-    } else {
-      indicator.classList.remove("show");
-    }
-  }, {passive: true});
-})();
-
 // Theme
 var isLight = localStorage.getItem("sc_theme") === "light";
 if (isLight) document.body.classList.add("light");
