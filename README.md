@@ -7,7 +7,7 @@
 
 ## Overview
 
-SwarmChat is a peer-to-peer multi-agent system built for the Vertex Swarm Challenge 2026. Three autonomous AI agents coordinate entirely over a UDP mesh network — discovering each other, claiming tasks, executing work, detecting faults, and recovering automatically — all without a master controller.
+SwarmChat is a peer-to-peer multi-agent system built for the Vertex Swarm Challenge 2026. Three autonomous AI agents coordinate entirely over an MQTT mesh network — discovering each other, claiming tasks, executing work, detecting faults, and recovering automatically — all without a master controller.
 
 As a real-world application, the swarm powers **SwarmChat** — an intelligent chat interface where agents race to answer user queries in parallel. If one agent fails mid-response, another takes over instantly. The user never notices.
 
@@ -26,28 +26,34 @@ This is fragile. One server crash kills everything. One network hiccup stops all
 SwarmChat eliminates the middleman entirely:
 
 ```
-[Agent 1] ←——UDP——→ [Agent 2]
-     ↑                    ↑
-     └———————UDP——————————┘
-               ↓
-          [Agent 3]
+[Agent 1] ←——MQTT——→ [Broker] ←——MQTT——→ [Agent 2]
+     ↑                                         ↑
+     └———————————————MQTT————————————————————┘
+                       ↓
+                  [Agent 3]
 
-No server. No broker. Pure peer-to-peer.
+Leaderless. Broker-coordinated. No single point of failure.
 ```
 
 ---
 
 ## Architecture
 
-### Layer 1 — The Swarm (P2P Coordination)
+### Layer 1 — The Swarm (MQTT Coordination)
 
-Built from scratch using Python `asyncio` and UDP sockets. No vendor middleware. No cloud dependency.
+Agents communicate via standard MQTT publish/subscribe protocol — fully compatible with FoxMQ by Tashi Network.
 
-| Function | Description |
-|----------|-------------|
-| **Discovery** | Agents announce themselves on startup and track peers via heartbeat signals |
-| **Task Claiming** | Agents broadcast claims across the mesh — no two agents ever duplicate work |
-| **Heartbeat** | Every agent pings peers every 3 seconds to confirm it is alive |
+| MQTT Topic | Purpose |
+|------------|---------|
+| `swarm/heartbeat` | Agents broadcast presence every 3 seconds |
+| `swarm/claim` | Agents claim tasks across the mesh — zero duplicates |
+| `swarm/complete` | Agents broadcast task completion to all peers |
+
+| Swarm Function | Description |
+|----------------|-------------|
+| **Discovery** | Agents connect to the MQTT broker and subscribe to swarm topics on startup |
+| **Task Claiming** | Agents publish to `swarm/claim` — no two agents ever duplicate work |
+| **Heartbeat** | Every agent publishes to `swarm/heartbeat` every 3 seconds |
 | **Fault Detection** | Silence for 10 seconds triggers a fault — the dead agent is declared offline |
 | **Auto Recovery** | Abandoned tasks are freed and claimed by surviving agents automatically |
 | **Consensus** | Agents collectively confirm when all work is done — no single agent decides |
@@ -60,11 +66,12 @@ A clean web-based chat interface powered entirely by the swarm.
 |---------|-------------|
 | **Parallel Execution** | All 3 agents race to answer — fastest response wins |
 | **Fault Tolerance** | If an agent fails mid-query, another delivers the response |
-| **Real-time Knowledge** | Answers grounded in current, up-to-date information |
-| **Smart Routing** | Different query types handled by the most appropriate agent strategy |
+| **Real-time Knowledge** | Answers grounded in current, up-to-date web search results |
+| **Smart Routing** | Coding questions skip search — factual questions trigger live search |
 | **Chat History** | Full conversation history saved locally, resumable at any time |
 | **Edit and Resend** | Users can edit any previous message and resend from that point |
 | **Light / Dark Mode** | Full theme support with persistent preference |
+| **Pull to Refresh** | Native browser pull-to-refresh support |
 
 ---
 
@@ -75,15 +82,16 @@ User sends a message
         ↓
 SwarmChat receives it
         ↓
-Smart router determines the best strategy for the query
+Smart router: coding question? → skip search
+              factual question? → fetch live web results
         ↓
-Real-time information fetched when needed
-        ↓
-All 3 agents process the query simultaneously
+All 3 agents process the query simultaneously via MQTT mesh
         ↓
 First agent to respond wins — result delivered to user
         ↓
 If an agent crashes → others already running → no interruption
+        ↓
+Response saved to local chat history
 ```
 
 ---
@@ -94,6 +102,7 @@ If an agent crashes → others already running → no interruption
 
 ```bash
 pip install -r requirements.txt
+apt-get install mosquitto -y
 ```
 
 ### Environment Variables
@@ -105,18 +114,28 @@ AI_API_KEY=your_key_here
 SEARCH_API_KEY=your_key_here
 ```
 
+### Start the MQTT Broker
+
+```bash
+mosquitto -v
+```
+
 ### Run the Swarm Demo (Terminal)
+
+In a second terminal:
 
 ```bash
 python3 run_swarm.py
 ```
 
 **What you will see:**
-1. 3 agents start up and discover each other via P2P mesh
-2. Tasks distributed across agents with zero duplication
-3. Kill any agent mid-run — swarm detects it within 10 seconds
-4. Abandoned task recovered and completed by a surviving agent
-5. All tasks complete regardless of agent failures
+1. 3 agents connect to MQTT broker and subscribe to swarm topics
+2. Heartbeats flowing across the mesh every 3 seconds
+3. Tasks distributed across agents with zero duplication
+4. Kill any agent mid-run — swarm detects it within 10 seconds
+5. Abandoned task recovered and completed by a surviving agent
+6. All tasks complete regardless of agent failures
+7. All agents disconnect cleanly from the broker
 
 ### Run SwarmChat (Web Interface)
 
@@ -133,7 +152,7 @@ Then open `http://localhost:5000`
 ```
 swarm-project/
 │
-├── agent.py              # Core agent — all 6 swarm functions
+├── agent.py              # Core agent — MQTT mesh + all 6 swarm functions
 ├── tasks.py              # Sample task definitions
 ├── run_swarm.py          # Launches all agents simultaneously
 ├── server.py             # Backend — swarm coordination + chat API
@@ -141,7 +160,7 @@ swarm-project/
 ├── vercel.json           # Deployment configuration
 │
 ├── api/
-│   └── index.py          # Serverless entry point
+│   └── index.py          # Serverless entry point for Vercel
 │
 └── templates/
     └── index.html        # SwarmChat web interface
@@ -153,7 +172,8 @@ swarm-project/
 
 | Component | Technology |
 |-----------|------------|
-| Agent coordination | Python asyncio + UDP sockets (built from scratch) |
+| Agent coordination | MQTT publish/subscribe (FoxMQ-compatible) via paho-mqtt |
+| MQTT broker | FoxMQ by Tashi Network (Mosquitto for ARM64 development) |
 | AI execution | Large language model inference |
 | Real-time knowledge | Live web search integration |
 | Web framework | Flask |
@@ -166,11 +186,11 @@ swarm-project/
 
 | Challenge Requirement | Our Implementation |
 |----------------------|-------------------|
-| Leaderless network | ✅ No master orchestrator — agents self-organize |
-| Auto-discovery | ✅ Agents find each other on startup via P2P mesh |
-| No central broker | ✅ Pure UDP mesh — no server in the middle |
-| Task negotiation | ✅ Broadcast-based claiming — zero duplicates |
-| Self-healing | ✅ Fault detection + automatic task recovery |
+| Leaderless network | ✅ No master orchestrator — agents self-organize via MQTT |
+| Auto-discovery | ✅ Agents subscribe to swarm topics on startup |
+| MQTT broker integration | ✅ Standard MQTT protocol — FoxMQ compatible |
+| Task negotiation | ✅ Broadcast claiming via `swarm/claim` — zero duplicates |
+| Self-healing | ✅ Heartbeat fault detection + automatic task recovery |
 | No single point of failure | ✅ Any 2 of 3 agents can complete all work |
 | Real-world application | ✅ SwarmChat — a practical AI assistant powered by the swarm |
 
@@ -178,10 +198,26 @@ swarm-project/
 
 ## Demo Highlights
 
+**MQTT mesh coordination:**
+
+```
+Agent 1 → PUBLISH swarm/heartbeat
+Agent 2 → PUBLISH swarm/heartbeat
+Agent 3 → PUBLISH swarm/heartbeat
+
+Agent 3 → PUBLISH swarm/claim {task_id: 1}
+Agent 1 → PUBLISH swarm/claim {task_id: 2}
+Agent 2 → PUBLISH swarm/claim {task_id: 3}
+
+Agent 3 → PUBLISH swarm/complete {task_id: 1}  ✓
+Agent 1 → PUBLISH swarm/complete {task_id: 2}  ✓
+Agent 2 → PUBLISH swarm/complete {task_id: 3}  ✓
+```
+
 **Fault Recovery in action:**
 
 ```
-Agent 2 claimed task 4
+Agent 2 claimed task 4 via swarm/claim
 Agent 2 was killed              ← agent dies mid-task
 FAULT DETECTED: Agent 2 is dead!
 Recovering task 4 from dead Agent 2
@@ -189,6 +225,12 @@ Agent 1 claimed task 4          ← swarm self-heals
 Agent 1 completed task 4
 All tasks complete ✓            ← nothing was lost
 ```
+
+---
+
+## Note on FoxMQ
+
+FoxMQ by Tashi Network does not currently provide an ARM64 binary. Development was carried out on an aarch64 machine using Mosquitto as the MQTT broker, which implements the same standard MQTT protocol. The agent code connects to any MQTT-compliant broker and is fully compatible with FoxMQ on amd64 systems.
 
 ---
 
