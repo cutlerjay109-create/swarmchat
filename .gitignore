@@ -4,3 +4,6 @@ __pycache__/
 *.pyo
 .env.local
 .vercel
+foxmq
+foxmq_0.1.0_linux-amd64.zip*
+foxmq.d/
